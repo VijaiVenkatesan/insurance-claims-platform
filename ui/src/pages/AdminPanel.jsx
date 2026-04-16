@@ -245,92 +245,156 @@ function ClaimsTab() {
         </button>
       </div>
 
-      {/* Table */}
-      <div className="table-container">
-        {loading ? (
-          <div className="loading-overlay"><div className="spinner" /></div>
-        ) : data.claims.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">📋</div>
-            <div className="empty-state-title">No claims found</div>
+      {/* Claims list — card on mobile, table on desktop */}
+      {loading ? (
+        <div className="loading-overlay"><div className="spinner" /></div>
+      ) : data.claims.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">📋</div>
+          <div className="empty-state-title">No claims found</div>
+        </div>
+      ) : (
+        <>
+          {/* ── MOBILE CARDS ── */}
+          <div className="mobile-claim-card-list">
+            {data.claims.map(c => {
+              const sc = statusConfig[c.status] || { label: c.status, cls: 'badge-pending', dot: '#888' }
+              const score = c.fraud_score
+              const lvl = score != null ? (score >= 0.75 ? 'high' : score >= 0.45 ? 'medium' : 'low') : null
+              return (
+                <div key={c.id} className="mobile-claim-card"
+                  onClick={() => navigate(`/claims/${c.id}`)}>
+                  <div className="mobile-claim-card-row">
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11,
+                      color: 'var(--brand)', fontWeight: 700 }}>{c.id}</span>
+                    <span className={`badge ${sc.cls}`}>
+                      <span className="badge-dot" style={{ background: sc.dot }} />
+                      {sc.label}
+                    </span>
+                  </div>
+                  <div className="mobile-claim-card-row">
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>{c.claimant_name || '—'}</span>
+                    <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                      {c.insurance_type || '—'}
+                    </span>
+                  </div>
+                  <div className="mobile-claim-card-row">
+                    <span style={{ fontSize: 13 }}>
+                      {c.claimed_amount ? fmtCurrency(c.claimed_amount, c.currency) : '—'}
+                    </span>
+                    {score != null && (
+                      <span style={{
+                        fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 700,
+                        color: lvl === 'high' ? 'var(--risk-high)'
+                             : lvl === 'medium' ? 'var(--risk-medium)' : 'var(--risk-low)'
+                      }}>Fraud: {(score * 100).toFixed(0)}%</span>
+                    )}
+                  </div>
+                  {/* Actions row — stop propagation to prevent card click */}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 10,
+                    paddingTop: 10, borderTop: '1px solid var(--border-subtle)' }}
+                    onClick={e => e.stopPropagation()}>
+                    <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}
+                      onClick={() => navigate(`/claims/${c.id}`)}>
+                      <Eye size={13} /> View
+                    </button>
+                    <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}
+                      onClick={() => setEditing(c)}>
+                      <Edit3 size={13} /> Edit
+                    </button>
+                    <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}
+                      onClick={() => handleReprocess(c.id)}>
+                      <RotateCcw size={13} /> Retry
+                    </button>
+                    <button className="btn btn-reject btn-sm btn-icon"
+                      onClick={() => setDeleting(c.id)}>
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
           </div>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Claim ID</th>
-                <th>Claimant</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Fraud</th>
-                <th>Status</th>
-                <th>Decision</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.claims.map(c => {
-                const sc = statusConfig[c.status] || { label: c.status, cls: 'badge-pending', dot: '#888' }
-                const score = c.fraud_score
-                const lvl = score != null ? (score >= 0.75 ? 'high' : score >= 0.45 ? 'medium' : 'low') : null
-                return (
-                  <tr key={c.id}>
-                    <td>
-                      <span className="claim-id" style={{ cursor: 'pointer', color: 'var(--brand)' }}
-                        onClick={() => navigate(`/claims/${c.id}`)}>
-                        {c.id}
-                      </span>
-                    </td>
-                    <td style={{ color: 'var(--text-primary)' }}>{c.claimant_name || '—'}</td>
-                    <td className="text-secondary">{c.insurance_type || '—'}</td>
-                    <td>{c.claimed_amount ? fmtCurrency(c.claimed_amount, c.currency) : '—'}</td>
-                    <td>
-                      {score != null ? (
-                        <span style={{
-                          fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 700,
-                          color: lvl === 'high' ? 'var(--risk-high)'
-                               : lvl === 'medium' ? 'var(--risk-medium)' : 'var(--risk-low)'
-                        }}>{(score * 100).toFixed(0)}%</span>
-                      ) : '—'}
-                    </td>
-                    <td>
-                      <span className={`badge ${sc.cls}`}>
-                        <span className="badge-dot" style={{ background: sc.dot }} />
-                        {sc.label}
-                      </span>
-                    </td>
-                    <td>
-                      {c.decision ? (
-                        <span className={`badge badge-${c.decision.toLowerCase()}`}>{c.decision}</span>
-                      ) : '—'}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                        <button className="btn btn-secondary btn-sm btn-icon"
-                          title="View" onClick={() => navigate(`/claims/${c.id}`)}>
-                          <Eye size={13} />
-                        </button>
-                        <button className="btn btn-secondary btn-sm btn-icon"
-                          title="Edit" onClick={() => setEditing(c)}>
-                          <Edit3 size={13} />
-                        </button>
-                        <button className="btn btn-secondary btn-sm btn-icon"
-                          title="Reprocess" onClick={() => handleReprocess(c.id)}>
-                          <RotateCcw size={13} />
-                        </button>
-                        <button className="btn btn-reject btn-sm btn-icon"
-                          title="Delete" onClick={() => setDeleting(c.id)}>
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+
+          {/* ── DESKTOP TABLE ── */}
+          <div className="table-container table-hide-mobile">
+            <table>
+              <thead>
+                <tr>
+                  <th>Claim ID</th>
+                  <th>Claimant</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Fraud</th>
+                  <th>Status</th>
+                  <th>Decision</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.claims.map(c => {
+                  const sc = statusConfig[c.status] || { label: c.status, cls: 'badge-pending', dot: '#888' }
+                  const score = c.fraud_score
+                  const lvl = score != null ? (score >= 0.75 ? 'high' : score >= 0.45 ? 'medium' : 'low') : null
+                  return (
+                    <tr key={c.id}>
+                      <td>
+                        <span className="claim-id" style={{ cursor: 'pointer', color: 'var(--brand)' }}
+                          onClick={() => navigate(`/claims/${c.id}`)}>
+                          {c.id}
+                        </span>
+                      </td>
+                      <td style={{ color: 'var(--text-primary)' }}>{c.claimant_name || '—'}</td>
+                      <td className="text-secondary">{c.insurance_type || '—'}</td>
+                      <td>{c.claimed_amount ? fmtCurrency(c.claimed_amount, c.currency) : '—'}</td>
+                      <td>
+                        {score != null ? (
+                          <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 700,
+                            color: lvl === 'high' ? 'var(--risk-high)'
+                                 : lvl === 'medium' ? 'var(--risk-medium)' : 'var(--risk-low)' }}>
+                            {(score * 100).toFixed(0)}%
+                          </span>
+                        ) : '—'}
+                      </td>
+                      <td>
+                        <span className={`badge ${sc.cls}`}>
+                          <span className="badge-dot" style={{ background: sc.dot }} />
+                          {sc.label}
+                        </span>
+                      </td>
+                      <td>
+                        {c.decision
+                          ? <span className={`badge badge-${c.decision.toLowerCase()}`}>{c.decision}</span>
+                          : '—'}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 5, justifyContent: 'flex-end' }}>
+                          <button className="btn btn-secondary btn-sm btn-icon" title="View"
+                            onClick={() => navigate(`/claims/${c.id}`)}>
+                            <Eye size={13} />
+                          </button>
+                          <button className="btn btn-secondary btn-sm btn-icon" title="Edit"
+                            onClick={() => setEditing(c)}>
+                            <Edit3 size={13} />
+                          </button>
+                          <button className="btn btn-secondary btn-sm btn-icon" title="Reprocess"
+                            onClick={() => handleReprocess(c.id)}>
+                            <RotateCcw size={13} />
+                          </button>
+                          <button className="btn btn-reject btn-sm btn-icon" title="Delete"
+                            onClick={() => setDeleting(c.id)}>
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       {/* Pagination */}
       {data.total > 25 && (

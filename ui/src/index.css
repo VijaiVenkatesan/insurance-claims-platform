@@ -457,7 +457,7 @@ td .claim-id {
 .btn-sm { padding: 5px 11px; font-size: 12px; }
 .btn-lg { padding: 11px 22px; font-size: 14px; }
 
-.btn-icon { padding: 8px; border-radius: var(--radius-md); }
+.btn-icon { padding: 0; width: 32px; height: 32px; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
 /* ───── DROPZONE ───── */
 .dropzone {
@@ -834,172 +834,359 @@ td .claim-id {
 
 /* ═══════════════════════════════════════════
    FULL RESPONSIVE — Mobile, Tablet, Desktop
+   Design tokens for all breakpoints
    ═══════════════════════════════════════════ */
 
-/* ── MOBILE MENU OVERLAY ─────────────────── */
+/* ── MOBILE MENU BUTTON ─────────────────── */
 .mobile-menu-btn {
   display: none;
-  align-items: center;
-  justify-content: center;
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 300;
   width: 40px; height: 40px;
   background: var(--bg-elevated);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  cursor: pointer; color: var(--text-primary);
-  position: fixed; top: 12px; left: 12px; z-index: 300;
+  cursor: pointer;
+  color: var(--text-primary);
+  align-items: center;
+  justify-content: center;
   transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
 }
-.mobile-menu-btn:hover { border-color: var(--brand); color: var(--brand); }
+.mobile-menu-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
 
+/* ── SIDEBAR OVERLAY ────────────────────── */
 .sidebar-overlay {
   display: none;
-  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-  z-index: 149; backdrop-filter: blur(2px);
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 149;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
+
+/* ── MOBILE CARD TABLE ──────────────────── */
+/* Used instead of horizontal-scroll table on small screens */
+.mobile-claim-card {
+  display: none;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border-color var(--transition);
+}
+.mobile-claim-card:hover { border-color: var(--brand); }
+.mobile-claim-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+.mobile-claim-card-row:last-child { margin-bottom: 0; }
 
 /* ── TABLET (≤1024px) ───────────────────── */
 @media (max-width: 1024px) {
-  .detail-grid { grid-template-columns: 1fr; }
-  .app-layout { grid-template-columns: 220px 1fr; }
-  .sidebar { width: 220px; }
-
-  /* Underwriting 2-col → 1-col */
-  .page-content > div[style*="grid-template-columns: 400px"] {
-    grid-template-columns: 1fr !important;
-  }
-  /* Clinical 2-col → 1-col */
-  .page-content > div[style*="gridTemplateColumns: 380px"] {
-    grid-template-columns: 1fr !important;
-  }
+  .app-layout { display: flex; }
+  .detail-grid { grid-template-columns: 1fr !important; }
 }
 
 /* ── MOBILE (≤768px) ────────────────────── */
 @media (max-width: 768px) {
-  /* Layout */
-  .app-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-  }
 
   /* Sidebar — off-canvas drawer */
   .sidebar {
-    position: fixed; top: 0; left: 0; bottom: 0;
-    width: 260px; z-index: 150;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 270px;
+    z-index: 150;
     transform: translateX(-100%);
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--shadow-lg);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 32px rgba(0,0,0,0.5);
   }
   .sidebar.open { transform: translateX(0); }
   .sidebar-overlay.open { display: block; }
 
-  /* Mobile hamburger button */
+  /* Hamburger visible */
   .mobile-menu-btn { display: flex; }
 
-  /* Main content fills full width */
+  /* Main content: no left margin, top padding for hamburger */
   .main-content {
     margin-left: 0 !important;
-    padding-top: 60px; /* Space for hamburger button */
+    padding-top: 56px;
+    min-height: 100vh;
   }
 
-  /* Page content spacing */
-  .page-header { padding: 16px 16px 0; }
-  .page-content { padding: 16px; }
-  .page-title { font-size: 18px; }
+  /* Page spacing */
+  .page-header { padding: 12px 14px 0; }
+  .page-content { padding: 12px 14px 24px; }
+  .page-title { font-size: 17px; line-height: 1.3; }
 
-  /* Stats: 2 columns on mobile */
-  .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat-card { padding: 14px; }
-  .stat-value { font-size: 24px; }
-
-  /* Tables: horizontal scroll */
-  .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table { min-width: 600px; }
+  /* Stats: 2 columns */
+  .stat-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px;
+  }
+  .stat-card { padding: 14px 12px; }
+  .stat-value { font-size: 22px; }
+  .stat-label { font-size: 11px; }
 
   /* Cards */
   .card { border-radius: var(--radius-md); }
-  .card-header { padding: 14px 16px; }
-  .card-body { padding: 14px 16px; }
+  .card-header { padding: 12px 14px; }
+  .card-body { padding: 12px 14px; }
 
-  /* Forms */
-  .form-group { margin-bottom: 14px; }
-  .form-input, .form-select, .form-textarea {
-    font-size: 16px; /* Prevents iOS zoom */
+  /* Forms — prevent iOS zoom (must be ≥16px) */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 16px !important;
     padding: 10px 12px;
   }
+  .form-label { font-size: 12px; }
+  .form-group { margin-bottom: 12px; }
 
   /* Buttons */
-  .btn { padding: 9px 16px; font-size: 13px; }
-  .btn-sm { padding: 6px 12px; font-size: 12px; }
-
-  /* Sidebar tabs on phase pages */
-  .page-header div[style*="border-bottom"] button {
-    padding: 10px 12px !important;
-    font-size: 12px !important;
+  .btn { padding: 9px 14px; font-size: 13px; }
+  .btn-sm { padding: 7px 12px; font-size: 12px; }
+  .btn-icon {
+    width: 34px !important;
+    height: 34px !important;
   }
 
-  /* Admin panel / Underwriting 2-column → stack */
-  div[style*="gridTemplateColumns: 400px"],
-  div[style*="grid-template-columns: 400px"],
-  div[style*="gridTemplateColumns: 380px"],
-  div[style*="grid-template-columns: 380px"] {
+  /* Tables: show card view, hide table */
+  .table-hide-mobile { display: none !important; }
+  .mobile-claim-card { display: block; }
+
+  /* For tables that stay: horizontal scroll */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md);
+  }
+  table { min-width: 560px; font-size: 12px; }
+  th, td { padding: 8px 10px; }
+
+  /* Action buttons row: 2×2 grid on mobile */
+  .action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  /* Phase page tabs: scrollable row */
+  .tab-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    padding-bottom: 2px;
+  }
+  .tab-bar button {
+    white-space: nowrap;
+    padding: 9px 14px !important;
+    font-size: 12px !important;
+    flex-shrink: 0;
+  }
+
+  /* Two-column layouts → single column */
+  .two-col-layout {
     display: flex !important;
     flex-direction: column !important;
   }
 
   /* Dashboard quick links: 1 column */
-  div[style*="gridTemplateColumns: 1fr 1fr 1fr"] {
+  .quick-links-grid {
     grid-template-columns: 1fr !important;
   }
 
-  /* Claim detail grid → stack */
+  /* Claim detail */
   .detail-grid { grid-template-columns: 1fr !important; }
 
-  /* ClaimID font */
-  .claim-id { font-size: 10px; }
-
-  /* Admin table actions */
-  .btn-icon { width: 28px; height: 28px; }
-
-  /* Chatbot position */
-  div[style*="bottom: 88px"][style*="right: 24px"] {
-    right: 8px !important;
-    bottom: 80px !important;
+  /* Modals: full-width on mobile */
+  .modal-content {
     width: calc(100vw - 16px) !important;
-    max-width: 380px !important;
-  }
-  button[style*="bottom: 24px"][style*="right: 24px"] {
-    bottom: 16px !important;
-    right: 16px !important;
+    max-width: 100% !important;
+    max-height: 96vh !important;
+    margin: 8px !important;
+    border-radius: var(--radius-lg) !important;
   }
 
-  /* Login page */
-  .login-card { max-width: 95vw; }
+  /* Chatbot */
+  .chatbot-window {
+    right: 6px !important;
+    bottom: 72px !important;
+    width: calc(100vw - 12px) !important;
+    max-width: 420px !important;
+    height: 480px !important;
+  }
+  .chatbot-btn {
+    bottom: 14px !important;
+    right: 14px !important;
+    width: 46px !important;
+    height: 46px !important;
+  }
+
+  /* Sidebar logo smaller */
+  .sidebar-logo { padding: 16px 16px 10px; }
+  .logo-text { font-size: 18px; }
+
+  /* Nav items larger touch targets */
+  .nav-item { padding: 9px 12px; min-height: 40px; font-size: 13px; }
 }
 
 /* ── SMALL MOBILE (≤480px) ──────────────── */
 @media (max-width: 480px) {
-  .stat-grid { grid-template-columns: 1fr; }
-  .stat-card { padding: 12px; }
-  
-  /* Phase page tabs: icons only or scroll */
-  .page-header div[style*="border-bottom"] {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap;
-    padding-bottom: 1px;
+  .stat-grid { grid-template-columns: 1fr 1fr !important; }
+  .stat-value { font-size: 20px; }
+
+  .page-header { padding: 10px 12px 0; }
+  .page-content { padding: 10px 12px 20px; }
+
+  /* Single column stats on very small */
+  .stat-grid.single-mobile { grid-template-columns: 1fr !important; }
+
+  /* Table stays horizontal-scroll, no card view for very small */
+  table { min-width: 520px; }
+
+  /* Modal adjustments */
+  .modal-content {
+    width: calc(100vw - 8px) !important;
+    max-height: 98vh !important;
+    border-radius: var(--radius-md) !important;
+    overflow-y: auto;
   }
 
-  /* Modal full screen on small phones */
-  div[style*="maxWidth: 560"],
-  div[style*="max-width: 560"] {
-    max-width: 95vw !important;
-    margin: 8px !important;
-    max-height: 95vh !important;
+  /* Chatbot full width on tiny screens */
+  .chatbot-window {
+    left: 4px !important;
+    right: 4px !important;
+    width: auto !important;
+    max-width: none !important;
+    bottom: 68px !important;
   }
+}
+
+/* ── LARGE DESKTOP (≥1440px) ────────────── */
+@media (min-width: 1440px) {
+  .page-content { max-width: 1400px; }
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 /* ── PRINT ─────────────────────────────── */
 @media print {
-  .sidebar, .mobile-menu-btn, .sidebar-overlay { display: none !important; }
+  .sidebar, .mobile-menu-btn, .sidebar-overlay,
+  .chatbot-btn, .chatbot-window { display: none !important; }
   .main-content { margin: 0 !important; padding: 0 !important; }
+  .card { border: 1px solid #ddd; box-shadow: none; }
+}
+
+/* ── TOUCH IMPROVEMENTS ─────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch devices: larger tap targets */
+  .btn { min-height: 40px; }
+  .btn-sm { min-height: 34px; }
+  .nav-item { min-height: 44px; }
+  .btn-icon {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  /* Remove hover effects that don't work on touch */
+  .nav-item:hover { background: none; }
+  .nav-item.active { background: var(--brand-dim); }
+
+  /* Better scrolling */
+  .table-container,
+  .tab-bar,
+  .sidebar-nav {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* ── MOBILE CLAIM CARD LIST ─────────────── */
+/* Desktop: hidden — card list is mobile-only */
+.mobile-claim-card-list { display: none; }
+
+/* Mobile: show cards, hide table */
+@media (max-width: 768px) {
+  .mobile-claim-card-list { display: block; }
+  .table-hide-mobile { display: none !important; }
+}
+
+/* ── CHATBOT POSITION OVERRIDES ─────────── */
+/* These override inline styles via class-based selectors */
+.chatbot-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 500;
+}
+.chatbot-panel {
+  position: fixed;
+  bottom: 88px;
+  right: 24px;
+  z-index: 499;
+  width: 360px;
+  height: 520px;
+}
+
+@media (max-width: 768px) {
+  .chatbot-fab { bottom: 14px; right: 14px; }
+  .chatbot-panel {
+    right: 6px;
+    bottom: 70px;
+    width: calc(100vw - 12px);
+    max-width: 420px;
+    height: 480px;
+  }
+}
+
+@media (max-width: 400px) {
+  .chatbot-panel {
+    left: 4px;
+    right: 4px;
+    width: auto;
+    max-width: none;
+  }
+}
+
+/* ── UNDERWRITING / CLINICAL 2-COL LAYOUT ── */
+@media (max-width: 768px) {
+  /* Override inline grid styles on Underwriting/Clinical pages */
+  .page-content [style*="gridTemplateColumns: 400px"],
+  .page-content [style*="grid-template-columns: 400px"],
+  .page-content [style*="gridTemplateColumns: 380px"],
+  .page-content [style*="grid-template-columns: 380px"] {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Dashboard 3-col quick links → 1-col */
+  .page-content [style*="gridTemplateColumns: 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* About page tech stack 4-col → 2-col */
+  .page-content [style*="gridTemplateColumns: repeat(4, 1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Phase roadmap 2-col → 1-col */
+  .page-content [style*="gridTemplateColumns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Stats overview in Admin → 2-col */
+  .page-content [style*="gridTemplateColumns: 1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
 }

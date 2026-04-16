@@ -84,9 +84,59 @@ export default function Claims() {
           </div>
         </motion.div>
 
-        {/* TABLE */}
+        {/* TABLE + MOBILE CARDS */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="table-container">
+
+          {/* Mobile cards */}
+          {!loading && claims.length > 0 && (
+            <div className="mobile-claim-card-list">
+              {claims.map(c => {
+                const sc = statusConfig[c.status] || { label: c.status, cls: 'badge-pending', dot: '#888' }
+                const score = c.fraud_score
+                const lvl = score != null ? (score >= 0.75 ? 'high' : score >= 0.45 ? 'medium' : 'low') : null
+                return (
+                  <div key={c.claim_id} className="mobile-claim-card"
+                    onClick={() => navigate(`/claims/${c.claim_id}`)}>
+                    <div className="mobile-claim-card-row">
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11,
+                        color: 'var(--brand)', fontWeight: 700 }}>{c.claim_id}</span>
+                      <span className={`badge ${sc.cls}`}>
+                        <span className="badge-dot" style={{ background: sc.dot }} />
+                        {sc.label}
+                      </span>
+                    </div>
+                    <div className="mobile-claim-card-row">
+                      <span style={{ fontWeight: 600, fontSize: 14 }}>
+                        {c.claimant_name || <span style={{ color: 'var(--text-muted)' }}>Processing…</span>}
+                      </span>
+                      <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                        {c.policy_type || '—'}
+                      </span>
+                    </div>
+                    <div className="mobile-claim-card-row">
+                      <span style={{ fontSize: 13 }}>
+                        {c.claimed_amount ? fmtCurrency(c.claimed_amount, c.currency) : '—'}
+                      </span>
+                      {score != null && (
+                        <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 700,
+                          color: lvl === 'high' ? 'var(--risk-high)'
+                               : lvl === 'medium' ? 'var(--risk-medium)' : 'var(--risk-low)' }}>
+                          Fraud: {(score * 100).toFixed(0)}%
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end',
+                      marginTop: 6, fontSize: 11, color: 'var(--text-muted)' }}>
+                      {fmtRelative(c.created_at)}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Desktop table */}
+          <div className="table-container table-hide-mobile">
             {loading ? (
               <div className="loading-overlay"><div className="spinner" /><span>Loading claims…</span></div>
             ) : claims.length === 0 ? (
@@ -151,7 +201,7 @@ export default function Claims() {
                 </tbody>
               </table>
             )}
-          </div>
+          </div>{/* end desktop table */}
 
           {/* PAGINATION */}
           {totalPages > 1 && (

@@ -151,8 +151,8 @@ export default function SupportChatbot() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(o => !o)}
-        style={{
-          position: 'fixed', bottom: 24, right: 24, zIndex: 500,
+        className="chatbot-fab"
+      style={{
           width: 52, height: 52, borderRadius: '50%',
           background: open ? 'var(--bg-elevated)' : 'linear-gradient(135deg, var(--brand), #007aff)',
           border: open ? '1px solid var(--border-default)' : 'none',
@@ -191,9 +191,8 @@ export default function SupportChatbot() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 16 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            className="chatbot-panel"
             style={{
-              position: 'fixed', bottom: 88, right: 24, zIndex: 499,
-              width: 360, height: 520,
               background: 'var(--bg-surface)',
               border: '1px solid var(--border-default)',
               borderRadius: 'var(--radius-xl)',
