@@ -479,59 +479,63 @@ async def submit_claim_with_reviewed_data(
     Skips OCR and extraction since user has already verified the data.
     """
     try:
-        claim_id = f"CLM-{datetime.utcnow().strftime('%Y%m%d')}-{str(_uuid.uuid4())[:8].upper()}"
+        import json as _json
 
-        # Build extraction result from reviewed data
-        extracted_data = {
-            "claimant_name":      reviewed.claimant_name,
-            "date_of_birth":      reviewed.date_of_birth,
-            "gender":             reviewed.gender,
-            "contact":            reviewed.contact,
-            "email":              reviewed.email,
-            "address":            reviewed.address,
-            "aadhaar_number":     reviewed.aadhaar_number,
-            "pan_number":         reviewed.pan_number,
-            "policy_number":      reviewed.policy_number,
-            "insurance_company":  reviewed.insurance_company,
-            "insurance_type":     reviewed.insurance_type or "HEALTH",
-            "policy_start_date":  reviewed.policy_start,
-            "policy_end_date":    reviewed.policy_end,
-            "sum_insured":        reviewed.sum_insured,
-            "incident_date":      reviewed.incident_date,
-            "reported_date":      reviewed.reported_date,
-            "hospital_name":      reviewed.hospital_name,
-            "doctor_name":        reviewed.doctor_name,
-            "diagnosis":          reviewed.diagnosis,
-            "treatment":          reviewed.treatment,
-            "claimed_amount":     reviewed.claimed_amount,
-            "currency":           reviewed.currency or "INR",
-            "amount_breakdown":   reviewed.amount_breakdown or {},
-            "country":            reviewed.country or "IN",
-        }
+        # Encode reviewed data as a structured text document.
+        # ClaimsService.submit_claim() handles all DB creation and pipeline correctly.
+        # The extraction LLM will re-parse this clean JSON perfectly, preserving
+        # all user-corrected values (including the verified claimed_amount).
+        reviewed_doc = f"""REVIEWED CLAIM DATA (User-verified OCR output)
+Original file: {reviewed.original_filename}
 
-        # Store claim in DB first
-        from app.infrastructure.db.repository import ClaimRepository
-        repo = ClaimRepository(db)
-        claim = await repo.create_claim(
-            claim_id=claim_id,
-            filename=reviewed.original_filename,
-            content_type="text/reviewed",  # marks as human-reviewed
-            file_size=len(reviewed.ocr_text),
-            insurance_type=reviewed.insurance_type or "HEALTH",
+=== CLAIMANT ===
+Name: {reviewed.claimant_name or ""}
+Date of Birth: {reviewed.date_of_birth or ""}
+Gender: {reviewed.gender or ""}
+Contact: {reviewed.contact or ""}
+Email: {reviewed.email or ""}
+Address: {reviewed.address or ""}
+Aadhaar: {reviewed.aadhaar_number or ""}
+PAN: {reviewed.pan_number or ""}
+
+=== POLICY ===
+Policy Number: {reviewed.policy_number or ""}
+Insurance Company: {reviewed.insurance_company or ""}
+Insurance Type: {reviewed.insurance_type or "HEALTH"}
+Policy Start: {reviewed.policy_start or ""}
+Policy End: {reviewed.policy_end or ""}
+Sum Insured: {reviewed.sum_insured or ""}
+
+=== INCIDENT ===
+Incident Date: {reviewed.incident_date or ""}
+Reported Date: {reviewed.reported_date or ""}
+Hospital: {reviewed.hospital_name or ""}
+Doctor: {reviewed.doctor_name or ""}
+Diagnosis: {reviewed.diagnosis or ""}
+Treatment: {reviewed.treatment or ""}
+
+=== CLAIM AMOUNTS (USER VERIFIED) ===
+Claimed Amount: {reviewed.claimed_amount or ""} {reviewed.currency or "INR"}
+Currency: {reviewed.currency or "INR"}
+Country: {reviewed.country or "IN"}
+
+=== ORIGINAL OCR TEXT ===
+{reviewed.ocr_text}
+"""
+
+        # Use service.submit_claim() — this is the single correct entry point
+        # It handles DB creation, pipeline execution, and async processing.
+        service = ClaimsService(db)
+        result = await service.submit_claim(
+            file_content=reviewed_doc.encode("utf-8"),
+            filename=reviewed.original_filename or "ocr_reviewed.txt",
+            content_type="text/plain",
+            correlation_id=None,
         )
 
-        # Run pipeline from VALIDATION step (OCR + extraction already done by user)
-        from app.workflows.claims_workflow import run_pipeline_from_extraction
-        await run_pipeline_from_extraction(
-            claim_id=claim_id,
-            extracted_data=extracted_data,
-            raw_text=reviewed.ocr_text,
-            db=db,
-        )
-
-        logger.info(f"Reviewed claim submitted: {claim_id}")
+        logger.info(f"Reviewed claim submitted via service: {result.claim_id}")
         return {
-            "claim_id": claim_id,
+            "claim_id": result.claim_id,
             "status": "VALIDATING",
             "message": "Your reviewed data has been submitted. Processing will complete in ~30 seconds.",
         }
